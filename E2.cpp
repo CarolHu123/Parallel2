@@ -3,12 +3,21 @@
 #include <pthread.h>
 #include <math.h>
 #include <time.h>
+#include <string.h>
 //#define MAX_NUMBER 100 // 最大整数值
 //#define NUM_THREADS 4 // 线程数
-
+//没有加锁 需要加锁
 int primes[20000000]; // 存储素数的数组
 int MAX_NUMBER=0;
 int NUM_THREADS=0;
+
+// help message
+void usage(char* usagename){
+    fprintf(stderr,"usage: %s,<number of threads>, max number\n",usagename);
+    fprintf(stderr,"number of threads shall greater than 0 less than 1024\n ");
+    exit(1);
+}
+
 void* mark_primes(void *arg) {
     int *args = (int *)arg;
     int start = args[0];
@@ -19,15 +28,20 @@ void* mark_primes(void *arg) {
             primes[j] = 1; // 标记非素数
         }
     }
+    return NULL;
 }
 
-int main() {
+int main(int argc, char* argv[]) {
     // 顺序预处理，计算最大数的平方根以内的素数
     // ...
-   
-    printf("please input MAX_NUMBER and NUM_THREADS:");
-    scanf("%d%d",&MAX_NUMBER,&NUM_THREADS);
+    if(strcmp(argv[1], "-h") ==0){
+        usage(argv[0]);
+    }
+    //printf("please input MAX_NUMBER and NUM_THREADS:");
+    //scanf("%d%d",&MAX_NUMBER,&NUM_THREADS);
     // 将范围划分为不同的块，并分配线程
+    MAX_NUMBER = atoi(argv[1]);
+    NUM_THREADS = atoi(argv[2]);
     int chunk_size = (MAX_NUMBER + 1) / NUM_THREADS;
     pthread_t threads[NUM_THREADS];
     int args[NUM_THREADS][2]; // 存储每个线程的参数
@@ -47,13 +61,13 @@ int main() {
     
     finish_t = clock();
     // 收集未标记的数字并打印素数
-   /* for (int i = 2; i <= MAX_NUMBER; i++) {
+   for (int i = 2; i <= MAX_NUMBER; i++) {
         if (primes[i] == 0) {
             printf("%d ", i); // 输出素数
         }
     }
     printf("\n");
-    */
+    
     double time_sum = (double)(finish_t - start_t) / CLOCKS_PER_SEC;//将时间转换为秒
     printf("CPU 占用的总时间：%f\n", time_sum);
     return 0;
